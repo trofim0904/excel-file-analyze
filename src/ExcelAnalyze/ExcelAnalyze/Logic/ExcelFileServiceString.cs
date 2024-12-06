@@ -1,7 +1,9 @@
 using System;
-using System.Runtime.InteropServices;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
-using System.Windows.Forms;
+using System.Threading.Tasks;
+using ExcelAnalyze.Model;
 using Excel = Microsoft.Office.Interop.Excel;
 using Message = ExcelAnalyze.Descriptor.Message;
 
@@ -9,88 +11,80 @@ namespace ExcelAnalyze.Logic
 {
     public class ExcelFileServiceString : IExcelFileService
     {
-        public string GetWorkBookSizes(string path, string password)
+        public async Task<string> GetWorkBookSizesAsync(string path, string password)
         {
+            var result = CreateBaseStringBuilder();
             try
             {
-                // Initialize Excel application
+                long fileBytes = new System.IO.FileInfo(path).Length;
                 Excel.Application excelApp = new Excel.Application();
                 Excel.Workbook workbook = null;
                 try
                 {
-                    workbook = string.IsNullOrEmpty(password)
-                        ? excelApp.Workbooks.Open(path, ReadOnly: true)
-                        : excelApp.Workbooks.Open(path, Password: password, ReadOnly: true);
-                    StringBuilder result = new StringBuilder("Worksheet Sizes:\n");
+                    workbook = GetWorkbook(path, password, excelApp);
+                    var worksheetTasks = new List<Task<Tuple<string, long>>>();
                     foreach (Excel.Worksheet worksheet in workbook.Sheets)
                     {
-                        Excel.Range usedRange = worksheet.UsedRange;
-                        long totalBytes = 0;
-                        // Iterate through each cell in the used range
-                        foreach (Excel.Range cell in usedRange)
-                        {
-                            // Calculate data size
-                            var cellValue = cell.Value2;
-                            if (cellValue != null)
-                            {
-                                totalBytes += Encoding.UTF8.GetByteCount(cellValue.ToString());
-                            }
-                            // Add size for cell formatting
-                            totalBytes += CalculateCellFormattingSize(cell);
-                        }
-                        double sizeInKb = totalBytes / 1024.0;
-                        double sizeInMb = sizeInKb / 1024.0;
-                        result.AppendLine($"{worksheet.Name}: {sizeInMb:F2} MB ({sizeInKb:F2} KB)");
-                        // Release COM object for current worksheet
-                        Marshal.ReleaseComObject(worksheet);
+                        worksheetTasks.Add(ProcessWorksheet(worksheet));
                     }
-                    result.AppendLine();
-                    result.AppendLine(string.Concat(Message.ProcessFinished, DateTime.Now));
-                    result.AppendLine(Message.Note);
-                    // Display the result in a TextBox or MessageBox
+                    var worksheetsInfo = await Task.WhenAll(worksheetTasks);
+                    var totalUsedRange = worksheetsInfo.Sum(info => info.Item2);
+                    foreach (var worksheetInfo in worksheetsInfo.OrderByDescending(i => i.Item2))
+                    {
+                        var worksheet = new Worksheet(worksheetInfo.Item1, 
+                            worksheetInfo.Item2, totalUsedRange, fileBytes);
+                        result.AppendLine(worksheet.ToString());
+                    }
+                    AddFooterInfo(result);
                     return result.ToString();
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message, Message.Error.Caption, MessageBoxButtons.OK,
-                        MessageBoxIcon.Error);
+                    Helper.ShowError(ex);
                 }
                 finally
                 {
-                    // Close the workbook and quit Excel
                     workbook?.Close(false);
                     excelApp.Quit();
-                    if (workbook != null)
-                    {
-                        Marshal.ReleaseComObject(workbook);
-                    }
-                    Marshal.ReleaseComObject(excelApp);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, Message.Error.Caption, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Helper.ShowError(ex);
             }
             return string.Concat(Message.ProcessFinished, DateTime.Now);
         }
 
-        private long CalculateCellFormattingSize(Excel.Range cell)
+        private static void AddFooterInfo(StringBuilder result)
         {
-            // Estimate formatting size based on common formatting attributes
-            long formattingSize = 0;
-            if (cell.Font != null)
-            {
-                formattingSize += 20; // Approx size for font attributes
-            }
-            if (cell.Interior != null)
-            {
-                formattingSize += 10; // Approx size for background color
-            }
-            if (cell.Borders != null)
-            {
-                formattingSize += 15; // Approx size for borders
-            }
-            return formattingSize;
+            result.AppendLine(Message.Line);
+            result.AppendLine();
+            result.AppendLine(string.Concat(Message.ProcessFinished, DateTime.Now));
+            result.AppendLine(Message.Note);
+        }
+
+        private static Excel.Workbook GetWorkbook(string path, string password, Excel.Application excelApp)
+        {
+            var workbook = string.IsNullOrEmpty(password)
+                ? excelApp.Workbooks.Open(path, ReadOnly: true)
+                : excelApp.Workbooks.Open(path, Password: password, ReadOnly: true);
+            return workbook;
+        }
+
+        private static StringBuilder CreateBaseStringBuilder()
+        {
+            StringBuilder result = new StringBuilder();
+            result.AppendLine(string.Concat(Message.ProcessStartedTime, DateTime.Now));
+            result.AppendLine();
+            result.AppendLine(Message.Worksheets);
+            result.AppendLine(Message.Line);
+            return result;
+        }
+
+        private Task<Tuple<string, long>> ProcessWorksheet(Excel.Worksheet worksheet)
+        {
+            Excel.Range usedRange = worksheet.UsedRange;
+            return Task.FromResult(new Tuple<string, long>(worksheet.Name, usedRange.Rows.Count));
         }
     }
 }
