@@ -31,11 +31,18 @@ namespace ExcelAnalyze
             pathTextBox.Text = filePath;
         }
 
-        private void getSize_Click(object sender, EventArgs e)
+        private async void getSize_Click(object sender, EventArgs e)
         {
-            resultRichTextBox.Text = Descriptor.Message.ProcessStarted;
-            IExcelFileService service = new ExcelFileServiceString();
-            resultRichTextBox.Text = service.GetWorkBookSizes(pathTextBox.Text, passwordTextBox.Text);
+            try
+            {
+                resultRichTextBox.Text = Descriptor.Message.ProcessStarted;
+                IExcelFileService service = new ExcelFileServiceString();
+                resultRichTextBox.Text = await service.GetWorkBookSizesAsync(pathTextBox.Text, passwordTextBox.Text);
+            }
+            catch (Exception ex)
+            {
+                Helper.ShowError(ex);
+            }
         }
     }
 }

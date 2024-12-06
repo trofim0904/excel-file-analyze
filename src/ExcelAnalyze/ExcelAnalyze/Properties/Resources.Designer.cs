@@ -59,5 +59,15 @@ namespace ExcelAnalyze.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap excel_office {
+            get {
+                object obj = ResourceManager.GetObject("excel_office", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
     }
 }

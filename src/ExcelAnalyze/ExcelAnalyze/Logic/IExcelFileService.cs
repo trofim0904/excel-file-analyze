@@ -1,7 +1,9 @@
+using System.Threading.Tasks;
+
 namespace ExcelAnalyze.Logic
 {
     public interface IExcelFileService
     {
-        string GetWorkBookSizes(string path, string password);
+        Task<string> GetWorkBookSizesAsync(string path, string password);
     }
 }
