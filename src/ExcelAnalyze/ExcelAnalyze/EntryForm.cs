@@ -6,9 +6,6 @@ namespace ExcelAnalyze
 {
     public partial class EntryForm : Form
     {
-        private const string FileSearchTitle = "Select an Excel File";
-        private const string FileSearchFilter = "Excel Files|*.xls;*.xlsx;*.xlsm";
-
         public EntryForm()
         {
             InitializeComponent();
@@ -21,8 +18,8 @@ namespace ExcelAnalyze
             var filePath = string.Empty;
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
-                openFileDialog.Filter = FileSearchFilter;
-                openFileDialog.Title = FileSearchTitle;
+                openFileDialog.Filter = Descriptor.Constant.FileSearchFilter;
+                openFileDialog.Title = Descriptor.Constant.FileSearchTitle;
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     filePath = openFileDialog.FileName;
