@@ -18,7 +18,7 @@ namespace ExcelAnalyze
 
         private void searchButton_Click(object sender, EventArgs e)
         {
-            string filePath = string.Empty;
+            var filePath = string.Empty;
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
                 openFileDialog.Filter = FileSearchFilter;
