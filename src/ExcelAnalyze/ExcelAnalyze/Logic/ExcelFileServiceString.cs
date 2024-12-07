@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ExcelAnalyze.Descriptor;
 using ExcelAnalyze.Model;
 using Excel = Microsoft.Office.Interop.Excel;
 using Message = ExcelAnalyze.Descriptor.Message;
@@ -16,11 +18,13 @@ namespace ExcelAnalyze.Logic
             var result = CreateBaseStringBuilder();
             try
             {
-                long fileBytes = new System.IO.FileInfo(path).Length;
+                var fileBytes = new FileInfo(path).Length;
+                AddFileSizeInfo(result, fileBytes, path);
                 Excel.Application excelApp = new Excel.Application();
                 Excel.Workbook workbook = null;
                 try
                 {
+                    result.AppendLine(Message.Line);
                     workbook = GetWorkbook(path, password, excelApp);
                     var worksheetTasks = new List<Task<Tuple<string, long>>>();
                     foreach (Excel.Worksheet worksheet in workbook.Sheets)
@@ -55,6 +59,14 @@ namespace ExcelAnalyze.Logic
             return string.Concat(Message.ProcessFinished, DateTime.Now);
         }
 
+        private static void AddFileSizeInfo(StringBuilder result, long fileBytes, string path)
+        {
+            result.AppendLine();
+            var fileName = Path.GetFileName(path);
+            result.AppendLine(string.Format(Message.BaseResultMessage, fileName, Helper.GetKbFromBytes(fileBytes),
+                Helper.GetMbFromBytes(fileBytes), Constant.FullPercent));
+        }
+
         private static void AddFooterInfo(StringBuilder result)
         {
             result.AppendLine(Message.Line);
@@ -75,9 +87,6 @@ namespace ExcelAnalyze.Logic
         {
             StringBuilder result = new StringBuilder();
             result.AppendLine(string.Concat(Message.ProcessStartedTime, DateTime.Now));
-            result.AppendLine();
-            result.AppendLine(Message.Worksheets);
-            result.AppendLine(Message.Line);
             return result;
         }
 

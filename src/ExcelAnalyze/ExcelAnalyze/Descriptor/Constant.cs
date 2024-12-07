@@ -2,6 +2,6 @@ namespace ExcelAnalyze.Descriptor
 {
     public static class Constant
     {
-        public static int FullPercent = 100;
+        public const int FullPercent = 100;
     }
 }

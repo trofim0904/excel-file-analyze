@@ -1,3 +1,5 @@
+using ExcelAnalyze.Descriptor;
+
 namespace ExcelAnalyze.Model
 {
     public class Worksheet
@@ -13,15 +15,15 @@ namespace ExcelAnalyze.Model
         public Worksheet(string name, long usedRange, long totalUsedRange, long fileBytes)
         {
             Name = name;
-            var bytes = (usedRange * fileBytes) / totalUsedRange;
+            var bytes = usedRange * fileBytes / totalUsedRange;
             SizeInKb = Helper.GetKbFromBytes(bytes);
             SizeInMb = Helper.GetMbFromBytes(bytes);
-            PercentWeight = bytes * Descriptor.Constant.FullPercent / fileBytes;
+            PercentWeight = bytes * Constant.FullPercent / fileBytes;
         }
 
         public override string ToString()
         {
-            return $"{Name,-20}| {SizeInKb,10:F2} KB | {SizeInMb,10:F2} MB | {PercentWeight,6}% ";
+            return string.Format(Message.BaseResultMessage, Name, SizeInKb, SizeInMb, PercentWeight);
         }
 
     }
