@@ -12,10 +12,10 @@ namespace ExcelAnalyze.Model
 
         public long PercentWeight { get; }
 
-        public Worksheet(string name, long usedRange, long totalUsedRange, long fileBytes)
+        public Worksheet(string name, decimal weight, decimal totalWeight, long fileBytes)
         {
             Name = name;
-            var bytes = usedRange * fileBytes / totalUsedRange;
+            var bytes = (long) (weight * fileBytes / totalWeight);
             SizeInKb = Helper.GetKbFromBytes(bytes);
             SizeInMb = Helper.GetMbFromBytes(bytes);
             PercentWeight = bytes * Constant.FullPercent / fileBytes;

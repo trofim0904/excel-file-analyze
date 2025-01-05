@@ -33,7 +33,7 @@ namespace ExcelAnalyze
             try
             {
                 resultRichTextBox.Text = Descriptor.Message.ProcessStarted;
-                IExcelFileService service = new ExcelFileServiceString();
+                IExcelFileService service = new ExcelFileServiceInterop();
                 resultRichTextBox.Text = await service.GetWorkBookSizesAsync(pathTextBox.Text, passwordTextBox.Text);
             }
             catch (Exception ex)
