@@ -1,3 +1,4 @@
+using System;
 using ExcelAnalyze.Descriptor;
 
 namespace ExcelAnalyze.Model
@@ -11,6 +12,9 @@ namespace ExcelAnalyze.Model
         public double SizeInMb { get; }
 
         public long PercentWeight { get; }
+
+        public Worksheet(Tuple<string, decimal> excelWorksheetTuple, decimal totalWeight, long fileBytes) 
+            : this(excelWorksheetTuple.Item1, excelWorksheetTuple.Item2, totalWeight, fileBytes) { }
 
         public Worksheet(string name, decimal weight, decimal totalWeight, long fileBytes)
         {
